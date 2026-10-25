@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.xlsx
+.env
+02-price-alerts/state.json
+03-csv-report/data/
+
+# Personal drafts, not for clients
+profil.md
+profile.md
+image-*.png
+04-invoice-extractor/invoices/
+*.db
+rates.png

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sales dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg: #f5f7fa; --card: #fff; --text: #1d2733; --muted: #6b7785; --line: #e3e8ee; --accent: #1f4e78; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+           padding: 18px 24px; background: var(--accent); color: #fff; }
+  h1 { margin: 0; font-size: 20px; }
+  select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 0; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; display: grid; gap: 16px;
+         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .kpi .label { color: var(--muted); font-size: 13px; }
+  .kpi .value { font-size: 28px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .wide { grid-column: 1 / -1; }
+  .half { grid-column: span 2; }
+  @media (max-width: 760px) { .half { grid-column: 1 / -1; } }
+  h2 { margin: 0 0 12px; font-size: 15px; }
+  canvas { max-height: 280px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Weekly sales</h1>
+  <label>Branch
+    <select id="region">
+      <option value="">All branches</option>
+      {% for r in regions %}<option>{{ r }}</option>{% endfor %}
+    </select>
+  </label>
+</header>
+<main>
+  <div class="card kpi"><div class="label">Sales</div><div class="value" id="kpi-sales">–</div></div>
+  <div class="card kpi"><div class="label">Units sold</div><div class="value" id="kpi-units">–</div></div>
+  <div class="card kpi"><div class="label">Best seller</div><div class="value" id="kpi-best">–</div></div>
+  <div class="card kpi"><div class="label">Top branch</div><div class="value" id="kpi-branch">–</div></div>
+  <div class="card wide"><h2>Sales per day</h2><canvas id="chart-days"></canvas></div>
+  <div class="card half"><h2>By branch</h2><canvas id="chart-regions"></canvas></div>
+  <div class="card half"><h2>By product</h2><canvas id="chart-products"></canvas></div>
+</main>
+<script>
+const money = v => v.toLocaleString("en-CA", { style: "currency", currency: "CAD" });
+const charts = {};
+
+function draw(id, type, labels, data) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type,
+    data: { labels, datasets: [{ data, backgroundColor: "#2e75b6", borderColor: "#1f4e78", tension: 0.3, fill: false }] },
+    options: { plugins: { legend: { display: false } }, indexAxis: type === "bar" ? "y" : "x",
+               animation: false, maintainAspectRatio: false }
+  });
+}
+
+async function refresh() {
+  const region = document.getElementById("region").value;
+  const s = await fetch("/api/summary?region=" + encodeURIComponent(region)).then(r => r.json());
+  document.getElementById("kpi-sales").textContent = money(s.total_sales);
+  document.getElementById("kpi-units").textContent = s.units.toLocaleString("en-CA");
+  document.getElementById("kpi-best").textContent = s.by_product.length ? s.by_product[0].name : "–";
+  document.getElementById("kpi-branch").textContent = s.by_region.length ? s.by_region[0].name : "–";
+  draw("chart-days", "line", s.by_day.map(d => d.day), s.by_day.map(d => d.sales));
+  draw("chart-regions", "bar", s.by_region.map(d => d.name), s.by_region.map(d => d.sales));
+  draw("chart-products", "bar", s.by_product.map(d => d.name), s.by_product.map(d => d.sales));
+}
+
+document.getElementById("region").addEventListener("change", refresh);
+refresh();
+</script>
+</body>
+</html>
