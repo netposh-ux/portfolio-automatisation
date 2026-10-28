@@ -1,12 +1,13 @@
 # Python automation examples
 
-I'm Jean-François, a Python developer based in Quebec City. I write scripts that take over the
-repetitive parts of people's work: copying data from websites, merging spreadsheets, reading
-invoices, watching prices, building small dashboards.
+I'm Jean-François, a Python developer and sysadmin based in Quebec City. I write scripts that take
+over the repetitive parts of people's work: copying data from websites, merging spreadsheets, reading
+invoices, watching prices, building small dashboards. I also keep servers healthy: logs, backups,
+Docker, Windows and Linux.
 
-This repo holds six small, working examples of that kind of job. Each one solves a problem I keep
+This repo holds ten small, working examples of that kind of job. Each one solves a problem I keep
 seeing in freelance job posts, and each one runs in a few seconds on sample data so you can try it
-yourself.
+yourself. Demos 7 to 10 come with automated tests (76 in total).
 
 | # | Demo | The problem it solves | Main tools |
 |---|---|---|---|
@@ -16,6 +17,10 @@ yourself.
 | 4 | [Invoice extractor](04-invoice-extractor/) | "I retype supplier invoices from PDFs into Excel." | pdfplumber, openpyxl |
 | 5 | [Exchange rates from an API](05-exchange-rates/) | "I need daily exchange rates in a spreadsheet, without doing it myself." | REST API, SQLite, matplotlib |
 | 6 | [Sales dashboard](06-sales-dashboard/) | "I want to see my numbers in a browser, not in ten Excel files." | Flask, Chart.js |
+| 7 | [Duplicate file finder](07-duplicate-finder/) | "The disk is full of copies of copies, and I don't dare delete anything." | CLI tool, SHA-256, JSON/HTML report, 16 pytest tests |
+| 8 | [Server health audit](08-server-health-audit/) | "The site went down and the clues are spread across five logs." | PowerShell 7, IIS/Nginx logs, Windows events, certificates, 19 Pester tests |
+| 9 | [Automated database backups](09-docker-backup-monitor/) | "Nobody knows if our backups still run, or if they would restore." | Docker Compose, Postgres, SQLite, Bash, SHA-256, rotation, 20 pytest tests |
+| 10 | [Parametric 3D-printable badges](10-parametric-stl/) | "I need 40 badges in four sizes, ready for the 3D printer." | NumPy, STL, mesh validation, batch from CSV, 21 pytest tests |
 
 ## A quick look
 
@@ -26,6 +31,14 @@ The sales dashboard (demo 6), built on the same messy CSV files as demo 3:
 Exchange rates pulled from the European Central Bank's data (demo 5):
 
 ![Exchange rate chart](docs/exchange-rates.png)
+
+A server health report built from IIS, Nginx and system logs (demo 8):
+
+![Server health report](docs/server-health.png)
+
+A 3D-printable badge generated from a few dimensions (demo 10):
+
+![Rendered STL badge](docs/stl-badge.png)
 
 ## Try them
 
@@ -49,6 +62,15 @@ Then run any demo. Each folder has its own README with what it does and what the
 .venv/bin/python 06-sales-dashboard/app.py    # then open http://127.0.0.1:5050
 ```
 
+Demos 7 to 10 have their own setup (a packaged CLI, PowerShell, Docker Compose, a 3D model generator);
+their READMEs give the exact commands. To run their tests:
+
+```bash
+(cd 07-duplicate-finder && uv run pytest)
+pwsh -c "Invoke-Pester ./08-server-health-audit/tests"
+.venv/bin/python -m pytest 09-docker-backup-monitor/tests 10-parametric-stl/tests
+```
+
 The scraping demos use [books.toscrape.com](https://books.toscrape.com), a site made for
 practicing web scraping. All the other data (sales, invoices) is generated and fake.
 
@@ -56,7 +78,8 @@ practicing web scraping. All the other data (sales, invoices) is generated and f
 
 - I start by asking what you do today, step by step, and what the result should look like.
 - You get a script you can read: plain Python, comments where it matters, and a short README.
-- I test it on your real files or pages before calling it done, and I fix it if a site changes.
+- I write automated tests for what you asked for, then test on your real files or pages before
+  calling it done, and I fix it if a site changes.
 - I don't take scraping jobs that break a site's terms of use, or anything involving fake accounts or spam.
 
 ## Other things I've built
