@@ -1,0 +1,4 @@
+name,shape,width,height,star_points,star_size,hole
+team-blue,circle,45,,6,18,4
+team-red,hexagon,50,50,6,24,0
+volunteer,rounded,70,40,5,22,5

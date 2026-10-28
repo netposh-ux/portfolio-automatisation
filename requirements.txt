@@ -5,3 +5,5 @@ pdfplumber>=0.11
 fpdf2>=2.7
 matplotlib>=3.8
 flask>=3.0
+numpy-stl>=3.1
+pytest>=8
