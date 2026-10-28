@@ -1,0 +1,54 @@
+# Postgres + a SQLite file, backed up on a schedule, with a status page on http://127.0.0.1:8080
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+      BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:?set it in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crm"]
+      interval: 5s
+      retries: 20
+
+  backup:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${BACKUP_DB_PASSWORD}
+      POSTGRES_URLS: postgresql://backup@db:5432/crm
+      SQLITE_FILES: /data/inventory.db
+      BACKUP_INTERVAL: ${BACKUP_INTERVAL:-86400}
+      KEEP_DAILY: ${KEEP_DAILY:-7}
+      KEEP_WEEKLY: ${KEEP_WEEKLY:-4}
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+      - status:/status
+    restart: unless-stopped
+
+  status:
+    image: nginx:1.27-alpine
+    depends_on:
+      - backup
+    volumes:
+      # nocopy: nginx must not fill the shared volume with its own files (owned by root);
+      # the backup container creates it, owned by its non-root user.
+      - type: volume
+        source: status
+        target: /usr/share/nginx/html
+        read_only: true
+        volume:
+          nocopy: true
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  status:
